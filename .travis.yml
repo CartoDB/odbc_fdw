@@ -1,5 +1,5 @@
 language: c
-
+dist: precise
 env:
   global:
     - PAGER=cat
@@ -14,38 +14,36 @@ before_install:
   - openssl aes-256-cbc -K $encrypted_d52b986e6313_key -iv $encrypted_d52b986e6313_iv -in $TRAVIS_BUILD_DIR/test/config/sqlserver.config.enc -out $TRAVIS_BUILD_DIR/test/config/sqlserver.config -d
 
   # Add custom PPAs from cartodb
-  - sudo add-apt-repository -y ppa:cartodb/postgresql-9.5
   - sudo add-apt-repository -y ppa:cartodb/odbc
+  # Add PostgreSQL 9.6. Due to we use precise right now, we don't have an odbc for trusty 
+  - sudo add-apt-repository "deb http://apt.postgresql.org/pub/repos/apt/ precise-pgdg main"
+  - wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
   - sudo apt-get update
 
   # Needed for the compilation of odbc_fdw.c
   - sudo apt-get -y install unixodbc-dev
 
-  # Force instalation of libgeos-3.5.0 (presumably needed because of existing version of postgis)
-  #- sudo apt-get -y install libgeos-3.5.0=3.5.0-1cdb2
-
   # Install postgres db and build deps
+  - sudo dpkg -l | grep postgresql
   - sudo /etc/init.d/postgresql stop # stop travis default instance
   - sudo apt-get -y remove --purge postgresql-9.1
   - sudo apt-get -y remove --purge postgresql-9.2
   - sudo apt-get -y remove --purge postgresql-9.3
   - sudo apt-get -y remove --purge postgresql-9.4
   - sudo apt-get -y remove --purge postgresql-9.5
-  - sudo rm -rf /var/lib/postgresql/
-  - sudo rm -rf /var/log/postgresql/
-  - sudo rm -rf /etc/postgresql/
-  - sudo apt-get -y remove --purge postgis-2.2
   - sudo apt-get -y autoremove
 
-  - sudo apt-get -y install postgresql-9.5=9.5.2-3cdb2
-  - sudo apt-get -y install postgresql-server-dev-9.5=9.5.2-3cdb2
+  # Install PostgreSQL 9.6
+  - sudo apt-get install postgresql-9.6
+  - sudo apt-get install postgresql-server-dev-9.6
+
   - sudo apt-get -y install odbcinst
   - sudo apt-get -y install odbc-postgresql
 
   # configure it to accept local connections from postgres
   - echo -e "# TYPE  DATABASE        USER            ADDRESS                 METHOD \nlocal   all             postgres                                trust\nlocal   all             all                                     trust\nhost    all             all             127.0.0.1/32            trust" \
-    | sudo tee /etc/postgresql/9.5/main/pg_hba.conf
-  - sudo /etc/init.d/postgresql restart 9.5
+    | sudo tee /etc/postgresql/9.6/main/pg_hba.conf
+  - sudo /etc/init.d/postgresql restart 9.6
 
   # Local MySQL
   - sudo apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install mysql-server-5.5
