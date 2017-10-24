@@ -1260,10 +1260,16 @@ static void odbcGetForeignPaths(PlannerInfo *root, RelOptInfo *baserel, Oid fore
 	#endif
 
 	odbcEstimateCosts(root, baserel, &startup_cost, &total_cost, foreigntableid);
-
-	add_path(baserel,
-	         (Path *) create_foreignscan_path(root, baserel, baserel->rows, startup_cost, total_cost,
-	         NIL, NULL, NULL, NIL /* no fdw_private list */));
+	
+        #if (PG_VERSION_NUM < 90600) /** less than 9.6 */
+                add_path(baserel,
+                         (Path *) create_foreignscan_path(root, baserel, baserel->rows, startup_cost, total_cost,
+                        NIL, NULL, NULL, NIL /* no fdw_private list */));
+        #else /** more than 9.6 */
+                add_path(baserel,
+                        (Path *) create_foreignscan_path(root, baserel, NULL, baserel->rows, startup_cost, total_cost,
+                        NIL, NULL, NULL, NIL /* no fdw_private list */));
+        #endif
 
 	#ifdef DEBUG
 		ereport(DEBUG1,
