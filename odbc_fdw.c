@@ -944,10 +944,14 @@ odbc_table_size(PG_FUNCTION_ARGS)
   char *serverName = text_to_cstring(PG_GETARG_TEXT_PP(0));
   char *tableName = text_to_cstring(PG_GETARG_TEXT_PP(1));
   char *defname = "table";
-  int tableSize;
+  unsigned int tableSize;
   List *tableOptions = NIL;
   Node *val = (Node *) makeString(tableName);
+#if PG_VERSION_NUM >= 100000
+  DefElem *elem = (DefElem *) makeDefElem(defname, val, -1);
+#else
   DefElem *elem = (DefElem *) makeDefElem(defname, val);
+#endif
 
   tableOptions = lappend(tableOptions, elem);
   Oid serverOid = oid_from_server_name(serverName);
@@ -964,10 +968,14 @@ odbc_query_size(PG_FUNCTION_ARGS)
   char *serverName = text_to_cstring(PG_GETARG_TEXT_PP(0));
   char *sqlQuery = text_to_cstring(PG_GETARG_TEXT_PP(1));
   char *defname = "sql_query";
-  int querySize;
+  unsigned int querySize;
   List *queryOptions = NIL;
   Node *val = (Node *) makeString(sqlQuery);
+#if PG_VERSION_NUM >= 100000
+  DefElem *elem = (DefElem *) makeDefElem(defname, val, -1);
+#else
   DefElem *elem = (DefElem *) makeDefElem(defname, val);
+#endif
 
   queryOptions = lappend(queryOptions, elem);
   Oid serverOid = oid_from_server_name(serverName);
@@ -1260,10 +1268,13 @@ static void odbcGetForeignPaths(PlannerInfo *root, RelOptInfo *baserel, Oid fore
 	#endif
 
 	odbcEstimateCosts(root, baserel, &startup_cost, &total_cost, foreigntableid);
-
 	add_path(baserel,
-	         (Path *) create_foreignscan_path(root, baserel, baserel->rows, startup_cost, total_cost,
-	         NIL, NULL, NULL, NIL /* no fdw_private list */));
+		(Path *) create_foreignscan_path(root, baserel,
+#if PG_VERSION_NUM >= 90600
+			NULL, /*PathTarget **/
+#endif
+	 	baserel->rows, startup_cost, total_cost,
+		NIL, NULL, NULL, NIL /* no fdw_private list */));
 
 	#ifdef DEBUG
 		ereport(DEBUG1,
