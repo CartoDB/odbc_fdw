@@ -1028,7 +1028,7 @@ Datum odbc_tables_list(PG_FUNCTION_ARGS)
     char *serverName = text_to_cstring(PG_GETARG_TEXT_PP(0));
     int serverOid = oid_from_server_name(serverName);
 
-    rowLimit = PG_GETARG_INT32(1); 
+    rowLimit = PG_GETARG_INT32(1);
     currentRow = 0;
 
     odbcFdwOptions options;
@@ -1067,7 +1067,7 @@ Datum odbc_tables_list(PG_FUNCTION_ARGS)
 
   funcctx = SRF_PERCALL_SETUP();
 
-  datafctx = funcctx->user_fctx; 
+  datafctx = funcctx->user_fctx;
   stmt = datafctx->stmt;
   tableResult = datafctx->tableResult;
   rowLimit = datafctx->rowLimit;
@@ -1261,9 +1261,15 @@ static void odbcGetForeignPaths(PlannerInfo *root, RelOptInfo *baserel, Oid fore
 
 	odbcEstimateCosts(root, baserel, &startup_cost, &total_cost, foreigntableid);
 
-	add_path(baserel,
-	         (Path *) create_foreignscan_path(root, baserel, baserel->rows, startup_cost, total_cost,
-	         NIL, NULL, NULL, NIL /* no fdw_private list */));
+	#if (PG_VERSION_NUM < 90600)
+		add_path(baserel,
+		        (Path *) create_foreignscan_path(root, baserel, baserel->rows, startup_cost, total_cost,
+		        NIL, NULL, NULL, NIL /* no fdw_private list */));
+  #else
+	  add_path(baserel,
+		        (Path *) create_foreignscan_path(root, baserel, NULL, baserel->rows, startup_cost, total_cost,
+		        NIL, NULL, NULL, NIL /* no fdw_private list */));
+  #endif
 
 	#ifdef DEBUG
 		ereport(DEBUG1,

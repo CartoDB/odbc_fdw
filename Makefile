@@ -16,6 +16,7 @@
 
 MODULE_big = odbc_fdw
 OBJS = odbc_fdw.o
+PGVERSION ?= 9.5
 
 EXTENSION = odbc_fdw
 DATA = odbc_fdw--0.0.1.sql \
@@ -36,12 +37,13 @@ ifdef DEBUG
 override CFLAGS += -DDEBUG -g -O0
 endif
 
-PG_CONFIG = pg_config
+PG_CONFIG = /usr/lib/postgresql/$(PGVERSION)/bin/pg_config
+#PG_CONFIG = pg_config
 PGXS := $(shell $(PG_CONFIG) --pgxs)
 include $(PGXS)
 
 GENERATED_SQL_FILES = $(wildcard $(TEST_DIR)/sql/*.sql)
 
 integration_tests:
-	bash test/tests-generator.sh
+	bash test/scripts/tests-generator.sh
 	make installcheck

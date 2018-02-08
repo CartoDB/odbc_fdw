@@ -1,5 +1,5 @@
 language: c
-
+dist: precise
 env:
   global:
     - PAGER=cat
@@ -16,16 +16,12 @@ before_install:
   # Add custom PPAs from cartodb
   - sudo add-apt-repository -y ppa:cartodb/postgresql-9.5
   - sudo add-apt-repository -y ppa:cartodb/odbc
+  # Add PostgreSQL 9.6. Due to we use precise right now, we don't have an odbc for trusty 
+  - sudo add-apt-repository "deb http://apt.postgresql.org/pub/repos/apt/ precise-pgdg main"
+  - wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
   - sudo apt-get update
 
-  # Needed for the compilation of odbc_fdw.c
-  - sudo apt-get -y install unixodbc-dev
-
-  # Force instalation of libgeos-3.5.0 (presumably needed because of existing version of postgis)
-  #- sudo apt-get -y install libgeos-3.5.0=3.5.0-1cdb2
-
-  # Install postgres db and build deps
-  - sudo /etc/init.d/postgresql stop # stop travis default instance
+  - sudo /etc/init.d/postgresql stop
   - sudo apt-get -y remove --purge postgresql-9.1
   - sudo apt-get -y remove --purge postgresql-9.2
   - sudo apt-get -y remove --purge postgresql-9.3
@@ -37,91 +33,24 @@ before_install:
   - sudo apt-get -y remove --purge postgis-2.2
   - sudo apt-get -y autoremove
 
-  - sudo apt-get -y install postgresql-9.5=9.5.2-3cdb2
-  - sudo apt-get -y install postgresql-server-dev-9.5=9.5.2-3cdb2
-  - sudo apt-get -y install odbcinst
-  - sudo apt-get -y install odbc-postgresql
+install:
+  - sudo bash ./test/scripts/ci/install_dependencies.sh
 
-  # configure it to accept local connections from postgres
-  - echo -e "# TYPE  DATABASE        USER            ADDRESS                 METHOD \nlocal   all             postgres                                trust\nlocal   all             all                                     trust\nhost    all             all             127.0.0.1/32            trust" \
-    | sudo tee /etc/postgresql/9.5/main/pg_hba.conf
-  - sudo /etc/init.d/postgresql restart 9.5
-
-  # Local MySQL
-  - sudo apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install mysql-server-5.5
-  - sudo apt-get -y install libmyodbc
-
-  # Local HIVE installation
-  - echo -e "Host *\n   StrictHostKeyChecking no" \
-    | sudo tee ~/.ssh/config
+  # Add localhost to known hosts file for SSH connection which is done by HADOOP in its initialization
+  - echo -e "Host *\n   StrictHostKeyChecking no" | sudo tee ~/.ssh/config
   - ssh-keygen -t dsa -P '' -f ~/.ssh/id_dsa
   - cat ~/.ssh/id_dsa.pub >> ~/.ssh/authorized_keys
   - chmod 0600 ~/.ssh/authorized_keys
-  - sudo apt-get -y install openjdk-7-jre
-  - wget -P /opt http://apache.rediris.es/hadoop/core/hadoop-2.7.2/hadoop-2.7.2.tar.gz
-  - wget -P /opt http://apache.rediris.es/hive/hive-2.1.1/apache-hive-2.1.1-bin.tar.gz
-  - tar -xzvf /opt/hadoop-2.7.2.tar.gz -C /opt
-  - tar -xzvf /opt/apache-hive-2.1.1-bin.tar.gz -C /opt
-  - sed -i -- 's/export JAVA_HOME=${JAVA_HOME}/export JAVA_HOME=\/usr\/lib\/jvm\/java-7-openjdk-amd64/g' $HADOOP_HOME/etc/hadoop/hadoop-env.sh
-  - $HADOOP_HOME/bin/hdfs dfs -mkdir /tmp/warehouse
-  - $HADOOP_HOME/bin/hdfs dfs -chmod g+w /tmp/warehouse
-  - $HADOOP_HOME/bin/hdfs dfs -mkdir /tmp/warehouse/fdw_tests
-  - $HADOOP_HOME/bin/hdfs dfs -chmod g+w /tmp/warehouse/fdw_tests
-  - cp $TRAVIS_BUILD_DIR/test/fixtures/hive_example.csv /tmp/warehouse/fdw_tests
+
+before_script:
+  # Start of hadoop and hive services
   - $HADOOP_HOME/sbin/start-dfs.sh
   - $HIVE_HOME/bin/schematool -initSchema -dbType derby
   - nohup $HIVE_HOME/bin/hive --service hiveserver2 &
-  # Wait for server to start
+  # Wait 10 seconds for HIVE server to start
   - sleep 10
-  #- $HIVE_HOME/bin/beeline -u jdbc:hive2://localhost:10000 -f $TRAVIS_BUILD_DIR/test/fixtures/hive_fixtures.sql
 
-  # Install Hiveserver2 driver
-  - sudo apt-get install libsasl2-modules-gssapi-mit
-  - wget -P /tmp http://public-repo-1.hortonworks.com/HDP/hive-odbc/2.1.2.1002/debian/hive-odbc-native_2.1.2.1002-2_amd64.deb
-  - sudo dpkg -i /tmp/hive-odbc-native_2.1.2.1002-2_amd64.deb
-
-  # SQL Server
-  - sudo apt-get -y install freetds=1.00.14cdb7
-
-  # ODBC installtion ini file
-  - echo "[PostgreSQL ANSI]" | sudo tee /etc/odbcinst.ini
-  - echo "Description = PostgreSQL ODBC driver (ANSI version)" | sudo tee -a /etc/odbcinst.ini
-  - echo "Driver      = psqlodbca.so" | sudo tee -a /etc/odbcinst.ini
-  - echo "Setup       = libodbcpsqlS.so" | sudo tee -a /etc/odbcinst.ini
-  - echo "Debug       = 0" | sudo tee -a /etc/odbcinst.ini
-  - echo "CommLog     = 1" | sudo tee -a /etc/odbcinst.ini
-  - echo "UsageCount  = 1" | sudo tee -a /etc/odbcinst.ini
-  - echo "\n" | sudo tee -a /etc/odbcinst.ini
-  - echo "[PostgreSQL Unicode]" | sudo tee -a /etc/odbcinst.ini
-  - echo "Description = PostgreSQL ODBC driver (Unicode version)" | sudo tee -a /etc/odbcinst.ini
-  - echo "Driver      = psqlodbcw.so" | sudo tee -a /etc/odbcinst.ini
-  - echo "Setup       = libodbcpsqlS.so" | sudo tee -a /etc/odbcinst.ini
-  - echo "Debug       = 0" | sudo tee -a /etc/odbcinst.ini
-  - echo "CommLog     = 1" | sudo tee -a /etc/odbcinst.ini
-  - echo "UsageCount  = 1" | sudo tee -a /etc/odbcinst.ini
-  - echo "\n" | sudo tee -a /etc/odbcinst.ini
-  - echo "[MySQL]" | sudo tee -a /etc/odbcinst.ini
-  - echo "Description = MySQL driver" | sudo tee -a /etc/odbcinst.ini
-  - echo "Driver      = libmyodbc.so" | sudo tee -a /etc/odbcinst.ini
-  - echo "Setup       = libodbcmyS.so" | sudo tee -a /etc/odbcinst.ini
-  - echo "CPTimeout   =" | sudo tee -a /etc/odbcinst.ini
-  - echo "CPReuse     =" | sudo tee -a /etc/odbcinst.ini
-  - echo "UsageCount  = 1" | sudo tee -a /etc/odbcinst.ini
-  - echo "\n" | sudo tee -a /etc/odbcinst.ini
-  - echo "[Hortonworks Hive ODBC Driver 32-bit]" | sudo tee -a /etc/odbcinst.ini
-  - echo "Description=Hortonworks Hive ODBC Driver (32-bit)" | sudo tee -a /etc/odbcinst.ini
-  - echo "Driver=/usr/lib/hive/lib/native/Linux-i386-32/libhortonworkshiveodbc32.so" | sudo tee -a /etc/odbcinst.ini
-  - echo "\n" | sudo tee -a /etc/odbcinst.ini
-  - echo "[Hortonworks Hive ODBC Driver 64-bit]" | sudo tee -a /etc/odbcinst.ini
-  - echo "Description=Hortonworks Hive ODBC Driver (64-bit)" | sudo tee -a /etc/odbcinst.ini
-  - echo "Driver=/usr/lib/hive/lib/native/Linux-amd64-64/libhortonworkshiveodbc64.so" | sudo tee -a /etc/odbcinst.ini
-  - echo "[FreeTDS]" | sudo tee -a /etc/odbcinst.ini
-  - echo "Driver=/usr/lib/x86_64-linux-gnu/libtdsodbc.so" | sudo tee -a /etc/odbcinst.ini
-  - echo "Setup=/usr/lib/x86_64-linux-gnu/odbc/libtdsS.so" | sudo tee -a /etc/odbcinst.ini
-
-install:
-  - bash $TRAVIS_BUILD_DIR/test/fixtures/load_all_fixtures.sh
-  - sudo make install
+  - sudo bash ./test/scripts/ci/load_fixtures.sh
 
 script:
-  - make integration_tests || { cat test/regression.diffs; false; }
+  - sudo bash ./test/scripts/ci/integration_tests.sh
