@@ -63,7 +63,7 @@ PG_MODULE_MAGIC;
 #ifdef DEBUG
 #define elog_debug(...) elog(DEBUG1, __VA_ARGS__)
 #else
-#define elog_debug(...) 1
+#define elog_debug(...) ((void) 0)
 #endif
 
 #define PROCID_TEXTEQ 67
