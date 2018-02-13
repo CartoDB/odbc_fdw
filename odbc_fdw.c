@@ -1606,7 +1606,6 @@ odbcIterateForeignScan(ForeignScanState *node)
 		{
 			SQLLEN indicator;
 			char * buf;
-			size_t buf_used;
 
 			int mask_index = i - 1;
 			int col_size = list_nth_int(col_size_array, mask_index);
@@ -1633,10 +1632,8 @@ odbcIterateForeignScan(ForeignScanState *node)
 			   And finally, SQL_C_NUMERIC and SQL_C_GUID could also be used.
 			*/
 			buf[0] = 0;
-			buf_used = 0;
 			ret = SQLGetData(stmt, i, SQL_C_CHAR,
 			                 buf, sizeof(char) * (col_size+1), &indicator);
-			buf_used = indicator;
 
 			if (ret == SQL_SUCCESS_WITH_INFO)
 			{
@@ -1709,7 +1706,6 @@ odbcIterateForeignScan(ForeignScanState *node)
 					}
 					pfree(buf);
 					buf = accum_buffer;
-					buf_used = accum_used;
 				}
 			}
 
