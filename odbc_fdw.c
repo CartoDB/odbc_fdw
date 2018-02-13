@@ -256,8 +256,8 @@ empty_string_if_null(char *string)
 	return string == NULL ? empty_string : string;
 }
 
-static const char odbc_attribute_prefix[] = "odbc_";
-static const int  odbc_attribute_prefix_len = sizeof(odbc_attribute_prefix) - 1; /*  strlen(odbc_attribute_prefix); */
+static const char   odbc_attribute_prefix[] = "odbc_";
+static const size_t odbc_attribute_prefix_len = sizeof(odbc_attribute_prefix) - 1; /*  strlen(odbc_attribute_prefix); */
 
 static bool
 is_odbc_attribute(const char* defname)
@@ -269,7 +269,7 @@ is_odbc_attribute(const char* defname)
 static const char *normalized_attributes[] = { "DRIVER", "DSN", "UID", "PWD" };
 static const char *normalized_attribute(const char* attribute_name)
 {
-	int i;
+	size_t i;
 	for (i=0; i < sizeof(normalized_attributes)/sizeof(normalized_attributes[0]); i++)
 	{
 		if (strcasecmp(attribute_name, normalized_attributes[i])==0)
