@@ -1782,7 +1782,11 @@ odbcExplainForeignScan(ForeignScanState *node, ExplainState *es)
 	/* Suppress file size if we're not showing cost details */
 	if (es->costs)
 	{
+#if PG_VERSION_NUM >= 110000
+		ExplainPropertyInteger("Foreign Table Size", "b", table_size, es);
+#else
 		ExplainPropertyLong("Foreign Table Size", table_size, es);
+#endif
 	}
 }
 
