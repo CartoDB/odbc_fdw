@@ -1,9 +1,9 @@
-# Run only if branch is local
-if: TRAVIS_PULL_REQUEST_SLUG = TRAVIS_REPO_SLUG
-
 language: c
 group: travis_stable
 sudo: required
+
+# Run only if branch is local
+if: env(TRAVIS_PULL_REQUEST_SLUG) = env(TRAVIS_REPO_SLUG)
 
 env:
   global:
