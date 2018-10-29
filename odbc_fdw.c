@@ -51,6 +51,13 @@
 #include "optimizer/restrictinfo.h"
 #include "optimizer/planmain.h"
 
+#include "access/tupdesc.h"
+
+/* TupleDescAttr was backported into 9.5.9 and 9.6.5 but we support any 9.5.X */
+#ifndef TupleDescAttr
+#define TupleDescAttr(tupdesc, i) ((tupdesc)->attrs[(i)])
+#endif
+
 #include "executor/spi.h"
 
 #include <stdio.h>
@@ -1129,11 +1136,7 @@ odbcGetQual(Node *node, TupleDesc tupdesc, List *col_mapping_list, char **key, c
 			StringInfoData  buf;
 			initStringInfo(&buf);
 			/* And get the column and value... */
-#if PG_VERSION_NUM >= 110000
-			*key = NameStr(tupdesc->attrs[varattno - 1].attname);
-#else
-			*key = NameStr(tupdesc->attrs[varattno - 1]->attname);
-#endif
+			*key = NameStr(TupleDescAttr(tupdesc, varattno - 1)->attname);
 
 			if (((Const *) right)->consttype == PROCID_TEXTCONST)
 				*value = TextDatumGetCString(((Const *) right)->constvalue);
@@ -1365,11 +1368,7 @@ odbcBeginForeignScan(ForeignScanState *node, int eflags)
 
 		/* retrieve the column name */
 		initStringInfo(&col);
-#if PG_VERSION_NUM >= 110000
-		appendStringInfo(&col, "%s", NameStr(rel->rd_att->attrs[i].attname));
-#else
-		appendStringInfo(&col, "%s", NameStr(rel->rd_att->attrs[i]->attname));
-#endif
+		appendStringInfo(&col, "%s", NameStr(TupleDescAttr(rel->rd_att,i)->attname));
 		mapped = false;
 
 		/* check if the column name is mapping to a different name in remote table */
