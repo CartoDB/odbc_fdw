@@ -13,3 +13,6 @@ test/expected/*_installation*
 test/config/*.config
 !test/config/config.sample.config
 test/config/*.tar
+
+# JIT
+**/*.bc
