@@ -1,4 +1,3 @@
-SET client_min_messages TO DEBUG1;
 CREATE SERVER mysql_fdw
 FOREIGN DATA WRAPPER odbc_fdw
 OPTIONS (

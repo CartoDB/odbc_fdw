@@ -62,7 +62,7 @@ install:
   - psql -U postgres -d fdw_tests -c "select * from pg_user_mapping"
   - psql -U postgres -d fdw_tests -c "select * from pg_foreign_table"
   - psql -U postgres -c "select * from pg_foreign_data_wrapper"
-  - sudo DEBUG=1 make install
+  - sudo make install
 
 script:
   - make integration_tests || { cat test/regression.diffs; false; }
