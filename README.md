@@ -211,4 +211,4 @@ LIMITATIONS
 * Foreign encodings are supported with the  `encoding` option
   for any enconding supported by PostgreSQL and compatible with the
   local database. The encoding must be identified with the
-  name used by [PostgreSQL](https://www.postgresql.org/docs/9.5/static/multibyte.html).
+  name used by [PostgreSQL](https://www.postgresql.org/docs/9.5/static/multibyte.html). test
