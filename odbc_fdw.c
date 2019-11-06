@@ -61,6 +61,10 @@
 #include "access/table.h"
 #endif
 
+#if defined(_WIN32)
+#define strcasecmp _stricmp
+#endif
+
 /* TupleDescAttr was backported into 9.5.9 and 9.6.5 but we support any 9.5.X */
 #ifndef TupleDescAttr
 #define TupleDescAttr(tupdesc, i) ((tupdesc)->attrs[(i)])
@@ -173,11 +177,11 @@ typedef enum { TEXT_CONVERSION, HEX_CONVERSION, BIN_CONVERSION, BOOL_CONVERSION 
 /*
  * SQL functions
  */
-extern Datum odbc_fdw_handler(PG_FUNCTION_ARGS);
-extern Datum odbc_fdw_validator(PG_FUNCTION_ARGS);
-extern Datum odbc_tables_list(PG_FUNCTION_ARGS);
-extern Datum odbc_table_size(PG_FUNCTION_ARGS);
-extern Datum odbc_query_size(PG_FUNCTION_ARGS);
+PGDLLEXPORT Datum odbc_fdw_handler(PG_FUNCTION_ARGS);
+PGDLLEXPORT Datum odbc_fdw_validator(PG_FUNCTION_ARGS);
+PGDLLEXPORT Datum odbc_tables_list(PG_FUNCTION_ARGS);
+PGDLLEXPORT Datum odbc_table_size(PG_FUNCTION_ARGS);
+PGDLLEXPORT Datum odbc_query_size(PG_FUNCTION_ARGS);
 
 PG_FUNCTION_INFO_V1(odbc_fdw_handler);
 PG_FUNCTION_INFO_V1(odbc_fdw_validator);
@@ -2036,6 +2040,7 @@ odbcImportForeignSchema(ImportForeignSchemaStmt *stmt, Oid serverOid)
 						 * in that case we must avoid using an schema to query the table columns.
 						 */
 						schema_name = NULL;
+						missing_foreign_schema = false;
 					}
 
 					/* Since we haven't specified SQL_ALL_CATALOGS in the
@@ -2150,7 +2155,11 @@ odbcImportForeignSchema(ImportForeignSchemaStmt *stmt, Oid serverOid)
 		int option_count = 0;
 		const char *prefix = empty_string_if_null(options.prefix);
 
+#if PG_VERSION_NUM >= 130000
+		table_columns_cell = lnext(table_columns, table_columns_cell);
+#else
 		table_columns_cell = lnext(table_columns_cell);
+#endif
 
 		initStringInfo(&create_statement);
 		appendStringInfo(&create_statement, "CREATE FOREIGN TABLE \"%s\".\"%s%s\" (", stmt->local_schema, prefix, (char *) table_name);

@@ -16,3 +16,7 @@ test/config/*.tar
 
 # JIT
 **/*.bc
+x64/
+Debug/
+Release/
+.vs/

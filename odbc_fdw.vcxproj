@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{2EB5E1F5-F370-4367-9BAD-CD241B28434C}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>odbc_fdw</RootNamespace>
+    <PlatformToolset>v140</PlatformToolset>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CustomBuildBeforeTargets>Link</CustomBuildBeforeTargets>
+    <WholeProgramOptimization Condition="'$(Configuration)'=='Release'">true</WholeProgramOptimization>
+    <pf>$(ProgramFiles)</pf>
+    <pf Condition="$(Platform)=='x64'">$(ProgramW6432)</pf>
+  </PropertyGroup>
+  <PropertyGroup Label="UserMacros">
+    <pgversion Condition="$(pgversion) == ''">11</pgversion>
+    <pgroot Condition="$(pgroot)==''">$(pf)\PostgreSQL\$(pgversion)</pgroot>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <PropertyGroup>
+    <IncludePath>$(pgroot)\include;$(pgroot)\include\server;$(pgroot)\include\server\port\win32;$(pgroot)\include\server\port\win32_msvc;$(IncludePath)</IncludePath>
+    <LibraryPath>$(pgroot)\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <CompileAs>CompileAsC</CompileAs>
+      <ExceptionHandling>false</ExceptionHandling>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <ClCompile Condition="$(Configuration)=='Release'">
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <StringPooling>true</StringPooling>
+    </ClCompile>
+    <ClCompile Condition="$(Configuration)=='Debug'">
+      <Optimization>Disabled</Optimization>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BrowseInformation Condition="$(CI)==''">true</BrowseInformation>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>postgres.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="odbc_fdw.c" />
+  </ItemGroup>
+</Project>
