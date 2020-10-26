@@ -44,3 +44,11 @@ IMPORT FOREIGN SCHEMA test_schema
       "odbc_BoolsAsChar" '0',
       "odbc_ByteaAsLongVarBinary" '1'
 );
+IMPORT FOREIGN SCHEMA public
+    FROM SERVER postgres_fdw
+    INTO public
+    OPTIONS(
+      table 'postgres_var_test_table',
+      "odbc_BoolsAsChar" '0',
+      "odbc_ByteaAsLongVarBinary" '1'
+);

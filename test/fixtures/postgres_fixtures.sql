@@ -1,6 +1,7 @@
 DROP TABLE IF EXISTS postgres_test_table;
 DROP TABLE IF EXISTS existent_table_in_schema_public;
 DROP TABLE IF EXISTS test_schema.test_table_in_schema;
+DROP TABLE IF EXISTS postgres_var_test_table;
 
 -- To test a normal import from public schema
 CREATE TABLE postgres_test_table (
@@ -28,3 +29,8 @@ CREATE TABLE test_schema.test_table_in_schema (
     data varchar(40)
 );
 INSERT INTO test_schema.test_table_in_schema VALUES (1, 'example');
+
+-- To test reading variable size data
+CREATE TABLE postgres_var_test_table(varch text, varbin bytea);
+INSERT INTO postgres_var_test_table
+  SELECT string_agg(to_hex(n), ''), ('\x' || string_agg(to_hex(n),''))::bytea FROM generate_series(1,2000) n;
