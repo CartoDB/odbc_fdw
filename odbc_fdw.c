@@ -1715,17 +1715,19 @@ odbcIterateForeignScan(ForeignScanState *node)
 			int used_buffer_size = 0;
 			GetDataTruncation truncation;
 			bool binary_data = false;
+			elog(NOTICE,"i: %d, col_size: %d, mapped_pos: %d conv: %d",(int)i, col_size, mapped_pos, (int)conversion);
+
 			if (conversion == BIN_CONVERSION)
 			{
 				target_type	= SQL_C_BINARY;
 				binary_data = true;
 			}
-			chunk_size = binary_data ? col_size : col_size + 1;
 
 			if (col_size == 0)
 			{
 				col_size = 1024;
 			}
+			chunk_size = binary_data ? col_size : col_size + 1;
 
 			/* Ignore this column if position is marked as invalid */
 			if (mapped_pos == -1)
@@ -1798,6 +1800,7 @@ odbcIterateForeignScan(ForeignScanState *node)
 				used_buffer_size = strnlen(buffer, used_buffer_size);
 			}
 
+            elog(NOTICE, "type: %d buffer_size: %d used: %d chunk: %d eff: %d ind: %ld", target_type, buffer_size, used_buffer_size, chunk_size, effective_chunk_size, result_size);
 			if (ret != SQL_SUCCESS_WITH_INFO)
 			{
 			    if (!SQL_SUCCEEDED(ret)) {
