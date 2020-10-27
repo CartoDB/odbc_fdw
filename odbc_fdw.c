@@ -1800,6 +1800,10 @@ odbcIterateForeignScan(ForeignScanState *node)
 
 			if (ret != SQL_SUCCESS_WITH_INFO)
 			{
+			    if (!SQL_SUCCEEDED(ret)) {
+					elog(NOTICE, "type: %d buffer_size: %d used: %d chunk: %d eff: %d ind: %ld", target_type, buffer_size, used_buffer_size, chunk_size, effective_chunk_size, result_size);
+				}
+
 				// TODO: review check_result behaviour for SQL_SUCCESS_WITH_INFO (it should not fail right?)
 				check_return(ret, "Reading data", stmt, SQL_HANDLE_STMT);
 			}
