@@ -27,3 +27,4 @@ SELECT * FROM sqlserver_test_table_with_unsupported_initial_column;
 ----+------
   1 | aaaa
 (1 row)
+

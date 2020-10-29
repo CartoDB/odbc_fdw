@@ -24,3 +24,4 @@ IMPORT FOREIGN SCHEMA dbo
     table 'sqlserver_test_table_with_unsupported_initial_column',
     ApplicationIntent 'ReadOnly'
 );
+-- NOTICE:  Data type not supported (-3) for column ignored

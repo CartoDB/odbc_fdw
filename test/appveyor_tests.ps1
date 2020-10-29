@@ -11,6 +11,15 @@ function Merge-Tokens($template, $tokens)
     })
 }
 
+function Uncomment($template)
+{
+  return [regex]::Replace(
+    $template,
+    '^-- ',
+    ''
+   )
+}
+
 # https://www.appveyor.com/docs/services-databases
 $Config = @{
   mysql = @{
@@ -43,6 +52,7 @@ $Config = @{
 foreach ($c in $Config.GetEnumerator()) {
   $tpl = Get-Content "$PSScriptRoot\template\$($c.Name)_installation_test.tpl" -Raw
   $generated_test = Merge-Tokens $tpl $($c.Value)
+  $generated_test = Uncomment $generated_test
   Set-Content -Path "$PSScriptRoot\sql/$($c.Name)_10_installation_test.sql" -Value $generated_test
   Set-Content -Path "$PSScriptRoot\expected\$($c.Name)_10_installation_test.out" -Value $generated_test
 }
@@ -53,6 +63,18 @@ $env:Path += ";C:\Program Files\MySQL\MySQL Server 5.7\bin"
 & createdb fdw_tests
 & psql -f test\fixtures\postgres_fixtures.sql fdw_tests postgres 2>&1 |
   %{ if ($_ -is [System.Management.Automation.ErrorRecord]) { $_.Exception.Message } else { $_ } } |
+
+  $generated_test = Merge-Tokens $tpl $($c.Value)
+  Set-Content -Path "$PSScriptRoot\sql/$($c.Name)_10_installation_test.sql" -Value $generated_test
+  Set-Content -Path "$PSScriptRoot\expected\$($c.Name)_10_installation_test.out" -Value $generated_test
+}
+
+$env:Path += ";C:\Program Files\MySQL\MySQL Server 5.7\bin"
+& mysql -e "create database fdw_tests character set utf8mb4 collate utf8mb4_unicode_ci;" --user=root
+& cmd.exe /c 'mysql fdw_tests --user=root < test\fixtures\mysql_fixtures.sql'
+& createdb fdw_tests
+& psql -f test\fixtures\postgres_fixtures.sql fdw_tests postgres 2>&1 |
+}
   Out-Default
 & sqlcmd -S "(local)\SQL2017" -U "sa" -d master -i "$PSScriptRoot\fixtures\sqlserver_fixtures.sql"
 Rename-Item -Path "$PSScriptRoot\sql\sqlserver_20_query_test_disabled.sql" -NewName "sqlserver_20_query_test.sql"
