@@ -11,13 +11,9 @@ function Merge-Tokens($template, $tokens)
     })
 }
 
-function Uncomment($template)
+function Merge-Tokens-Uncomment($template, $tokens)
 {
-  return [regex]::Replace(
-    $template,
-    '^-- ',
-    ''
-   )
+  return [regex]::Replace(Merge-Tokens($template, $tokens), '^-- ', '')
 }
 
 # https://www.appveyor.com/docs/services-databases
@@ -51,8 +47,7 @@ $Config = @{
 
 foreach ($c in $Config.GetEnumerator()) {
   $tpl = Get-Content "$PSScriptRoot\template\$($c.Name)_installation_test.tpl" -Raw
-  $generated_test = Merge-Tokens $tpl $($c.Value)
-  $generated_test = Uncomment $generated_test
+  $generated_test = Merge-Tokens-Uncomment $tpl $($c.Value)
   Set-Content -Path "$PSScriptRoot\sql/$($c.Name)_10_installation_test.sql" -Value $generated_test
   Set-Content -Path "$PSScriptRoot\expected\$($c.Name)_10_installation_test.out" -Value $generated_test
 }
