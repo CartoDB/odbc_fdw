@@ -14,5 +14,13 @@ IMPORT FOREIGN SCHEMA dbo
   FROM SERVER sqlserver_fdw
   INTO public
   OPTIONS(
+    table 'sqlserver_test_table',
+    ApplicationIntent 'ReadOnly'
+);
+IMPORT FOREIGN SCHEMA dbo
+  FROM SERVER sqlserver_fdw
+  INTO public
+  OPTIONS(
+    table 'sqlserver_test_table_with_unsupported_initial_column',
     ApplicationIntent 'ReadOnly'
 );
