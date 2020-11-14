@@ -475,7 +475,7 @@ odbc_connection(odbcFdwOptions* options, SQLHENV *env, SQLHDBC *dbc)
 	SQLAllocHandle(SQL_HANDLE_DBC, *env, dbc);
 	/* Connect to the DSN */
 	ret = SQLDriverConnect(*dbc, NULL, (SQLCHAR *) conn_str.data, SQL_NTS,
-	                       OutConnStr, 1024, &OutConnStrLen, SQL_DRIVER_COMPLETE);
+	                       OutConnStr, 1024, &OutConnStrLen, SQL_DRIVER_NOPROMPT);
 	check_return(ret, "Connecting to driver", dbc, SQL_HANDLE_DBC);
 	elog_debug("Connection opened");
 }
