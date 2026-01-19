@@ -1357,6 +1357,9 @@ static void odbcGetForeignPaths(PlannerInfo *root, RelOptInfo *baserel, Oid fore
 	                 NIL, /* no pathkeys */
 	                 NULL, /* no outer rel either */
 	                 NULL, /* no extra plan */
+#if PG_VERSION_NUM >= 170000
+	                 NIL, /* no fdw_restrictinfo list */
+#endif
 	                 NIL /* no fdw_private list */));
 
 	elog_debug("----> finishing %s", __func__);
