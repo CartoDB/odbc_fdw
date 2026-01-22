@@ -13,10 +13,12 @@ environment:
   MYSQL_PWD: Password12!
   SQLCMDPASSWORD: Password12!
   matrix:
-  - pg: 11.5-2
+  - pg: 11.8-3
     PlatformToolset: v140
-  - pg: 12.0-1
-    PlatformToolset: v141
+  - pg: 12.4-1
+    PlatformToolset: v140
+  - pg: REL_13_STABLE
+    PlatformToolset: v140
   - pg: master
     PlatformToolset: v141
     configuration: Debug
@@ -55,6 +57,11 @@ install:
         }
         & ".\$env:exe" --unattendedmodeui none --mode unattended --superpassword "$env:PGPASSWORD" --servicepassword "$env:PGPASSWORD" | Out-Null
         Stop-Service "postgresql$env:x64-$env:pgversion"
+      }
+      & "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\amd64\dumpbin.exe" `
+        /dependents $env:pgroot\bin\postgres.exe | ?{$_ -match "vcruntime(\d+)"} | %{Write-Output "Linked runtime: $_"}
+      if ($env:PlatformToolset -notmatch $Matches[1]) {
+        Add-AppveyorMessage -Message "Platform toolset mismatch!" -Category Warning -Details "Change it to $($Matches[1])"
       }
     }
 
